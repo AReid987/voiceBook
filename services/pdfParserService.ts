@@ -1,9 +1,8 @@
-
 import * as pdfjs from 'pdfjs-dist';
-import { PDF_WORKER_URL } from '../constants';
 import { Chapter } from '../types';
 
-pdfjs.GlobalWorkerOptions.workerSrc = PDF_WORKER_URL;
+// @ts-ignore
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
 
 export async function parsePdf(file: File): Promise<{ sentences: string[], chapters: Chapter[] }> {
   const fileReader = new FileReader();

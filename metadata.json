@@ -1,5 +1,5 @@
 {
-  "name": "PDF Audiobook Narrator",
+  "name": "VoiceBook",
   "description": "Upload a PDF document and have it narrated back to you with a selection of high-quality AI voices powered by Gemini.",
   "requestFramePermissions": []
 }

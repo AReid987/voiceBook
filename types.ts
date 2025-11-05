@@ -6,6 +6,8 @@ export interface VoiceOption {
 
 export type PlaybackState = 'stopped' | 'playing' | 'paused' | 'buffering';
 
+export type VoiceEngine = 'gemini' | 'browser';
+
 export interface Chapter {
   title: string;
   sentenceIndex: number;

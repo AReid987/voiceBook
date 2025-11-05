@@ -2,19 +2,23 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 
 let ai: GoogleGenAI | null = null;
-const getAI = () => {
-  if (!ai) {
-    if (!process.env.API_KEY) {
-      throw new Error("API_KEY environment variable not set");
-    }
-    ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  }
-  return ai;
-};
+let currentApiKey: string | null = null;
 
-export async function generateSpeech(text: string, voice: string): Promise<string> {
+function getAI(apiKey: string) {
+  if (ai && currentApiKey === apiKey) {
+    return ai;
+  }
+  if (!apiKey) {
+    throw new Error("API key is missing.");
+  }
+  ai = new GoogleGenAI({ apiKey });
+  currentApiKey = apiKey;
+  return ai;
+}
+
+export async function generateSpeech(text: string, voice: string, apiKey: string): Promise<string> {
   try {
-    const genai = getAI();
+    const genai = getAI(apiKey);
     const response = await genai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text }] }],
@@ -36,6 +40,9 @@ export async function generateSpeech(text: string, voice: string): Promise<strin
     }
   } catch (error) {
     console.error("Error generating speech:", error);
+    if (error instanceof Error && error.message.includes('API key not valid')) {
+       throw new Error("The provided API key is not valid. Please check it and try again.");
+    }
     throw new Error("Failed to generate audio. Please check your API key and network connection.");
   }
 }
