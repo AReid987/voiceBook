@@ -15,7 +15,7 @@ const BookmarkIcon = ({ className }: { className?: string }) => <svg className={
 const ListIcon = ({ className }: { className?: string }) => <svg className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"></path></svg>;
 const SpeedIcon = ({ className }: { className?: string }) => <svg className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 13.41c.44-.44.66-1.01.66-1.62s-.22-1.18-.66-1.62l-4.24-4.24c-.78-.78-2.05-.78-2.83 0s-.78 2.05 0 2.83l4.24 4.24c.78.78 2.05.78 2.83 0zM12 22C6.48 22 2 17.52 2 12S6.48 2 12 2s10 4.48 10 10-4.48 10-10 10zm0-18c-4.41 0-8 3.59-8 8s3.59 8 8 8 8-3.59 8-8-3.59-8-8-8z"></path></svg>;
 const ChevronDownIcon = ({ className }: { className?: string }) => <svg className={className} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>;
-const SettingsIcon = ({ className }: { className?: string }) => <svg className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path></svg>;
+const SettingsIcon = ({ className }: { className?: string }) => <svg className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59-1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path></svg>;
 
 const PLAYBACK_SPEEDS = [0.75, 1, 1.25, 1.5, 2];
 
@@ -42,7 +42,7 @@ export default function App() {
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
-  const currentSentenceRef = useRef<HTMLSpanElement | null>(null);
+  const currentSentenceRef = useRef<HTMLParagraphElement | null>(null);
   const isPlayingRef = useRef(false);
 
   useEffect(() => { isPlayingRef.current = playbackState === 'playing' || playbackState === 'buffering'; }, [playbackState]);
@@ -67,18 +67,28 @@ export default function App() {
   }, [currentSentenceIndex]);
 
   const cleanupAudio = useCallback(() => {
+    browserTtsService.cancel();
     if (currentSourceRef.current) {
         currentSourceRef.current.onended = null;
-        currentSourceRef.current.stop();
+        try {
+            currentSourceRef.current.stop();
+        } catch (e) {
+            // Can throw if not playing, safe to ignore
+        }
         currentSourceRef.current.disconnect();
         currentSourceRef.current = null;
     }
-    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-        audioContextRef.current.close().catch(console.error);
-    }
-    audioContextRef.current = null;
-    browserTtsService.cancel();
   }, []);
+  
+  // Effect for component unmount cleanup
+  useEffect(() => {
+    return () => {
+        cleanupAudio();
+        if (audioContextRef.current) {
+            audioContextRef.current.close().catch(console.error);
+        }
+    };
+  }, [cleanupAudio]);
   
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -102,6 +112,17 @@ export default function App() {
     finally { setIsLoading(false); setLoadingMessage(''); }
   };
   
+  const ensureAudioContext = useCallback(() => {
+    if (voiceEngine === 'gemini') {
+        if (!audioContextRef.current) {
+            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        }
+        if (audioContextRef.current.state === 'suspended') {
+            audioContextRef.current.resume();
+        }
+    }
+  }, [voiceEngine]);
+  
   const playSentence = useCallback(async (index: number) => {
     if (index >= sentences.length) { setPlaybackState('stopped'); cleanupAudio(); setCurrentSentenceIndex(0); return; }
     if (!isPlayingRef.current) return;
@@ -111,18 +132,29 @@ export default function App() {
     
     if (voiceEngine === 'gemini') {
         if (!apiKey) { setError("Please set your Gemini API key in Settings."); setPlaybackState('stopped'); return; }
+        
+        const audioCtx = audioContextRef.current;
+        if (!audioCtx) {
+            setError("Audio context not ready. Please click play to initialize.");
+            setPlaybackState('stopped');
+            return;
+        }
+
         setPlaybackState('buffering');
         try {
           const audioB64 = await generateSpeech(sentences[index], selectedGeminiVoice, apiKey);
           const audioBytes = decodeBase64(audioB64);
-          if (!audioContextRef.current || audioContextRef.current.state === 'closed') { audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)(); }
-          const audioBuffer = await decodeAudioData(audioBytes, audioContextRef.current);
-          if (!isPlayingRef.current) return;
-          if (audioContextRef.current.state === 'suspended') { await audioContextRef.current.resume(); }
-          const source = audioContextRef.current.createBufferSource();
+
+          if (!isPlayingRef.current) { cleanupAudio(); return; }
+          
+          const audioBuffer = await decodeAudioData(audioBytes, audioCtx);
+          
+          if (audioCtx.state === 'suspended') { await audioCtx.resume(); }
+
+          const source = audioCtx.createBufferSource();
           source.buffer = audioBuffer;
           source.playbackRate.value = playbackRate;
-          source.connect(audioContextRef.current.destination);
+          source.connect(audioCtx.destination);
           source.onended = () => { if (isPlayingRef.current) { playSentence(index + 1); } };
           currentSourceRef.current = source;
           source.start();
@@ -137,6 +169,7 @@ export default function App() {
   }, [sentences, selectedGeminiVoice, cleanupAudio, playbackRate, voiceEngine, apiKey, browserVoices, selectedBrowserVoiceUri]);
 
   const handlePlay = () => {
+    ensureAudioContext();
     if (playbackState === 'paused') {
       if (voiceEngine === 'gemini' && audioContextRef.current) { audioContextRef.current.resume(); } 
       else { browserTtsService.resume(); }
@@ -166,13 +199,14 @@ export default function App() {
   };
 
   const handleJumpToSentence = (index: number) => {
+    ensureAudioContext();
     const wasPlaying = isPlayingRef.current;
     cleanupAudio();
-    setPlaybackState('stopped');
-    setTimeout(() => {
-        setCurrentSentenceIndex(index);
-        if (wasPlaying) { setPlaybackState('playing'); playSentence(index); }
-    }, 100);
+    setCurrentSentenceIndex(index);
+    if (wasPlaying) {
+        setPlaybackState('playing');
+        playSentence(index);
+    }
   };
 
   const handleAddBookmark = () => {
@@ -212,7 +246,7 @@ export default function App() {
       <div className="w-full max-w-2xl mx-auto bg-gray-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         <header className="p-6 bg-gray-900/50 border-b border-gray-700 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-500">PDF Audiobook Narrator</h1>
+            <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-500">VoiceBook</h1>
             <p className="text-gray-400 mt-1 text-sm">Your personal AI storyteller</p>
           </div>
           <button onClick={() => setIsSettingsOpen(true)} className="p-2 rounded-full hover:bg-gray-700 transition-colors" aria-label="Settings"><SettingsIcon className="w-6 h-6"/></button>
@@ -233,24 +267,22 @@ export default function App() {
           ) : (
             <div className="flex flex-col items-center space-y-6">
               <h2 className="text-2xl font-bold text-center truncate w-full px-4" title={bookTitle}>{bookTitle}</h2>
-              <div className="w-full p-4 bg-gray-900/70 rounded-lg h-64 overflow-y-auto text-lg leading-relaxed">
+              <div className="w-full p-4 bg-gray-900/70 rounded-lg h-96 overflow-y-auto text-lg leading-relaxed flex flex-col space-y-4">
                 {sentences.length > 0 ? (
-                  <p className="text-left">
-                    {sentences.map((sentence, index) => (
-                      <span
-                        key={index}
-                        ref={index === currentSentenceIndex ? currentSentenceRef : null}
-                        onClick={() => handleJumpToSentence(index)}
-                        className={`cursor-pointer transition-all duration-300 p-1 rounded ${
-                          index === currentSentenceIndex
-                            ? 'bg-indigo-500/30 text-indigo-200'
-                            : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                        }`}
-                      >
-                        {sentence}{' '}
-                      </span>
-                    ))}
-                  </p>
+                  sentences.map((sentence, index) => (
+                    <p
+                      key={index}
+                      ref={index === currentSentenceIndex ? currentSentenceRef : null}
+                      onClick={() => handleJumpToSentence(index)}
+                      className={`cursor-pointer transition-all duration-300 p-2 rounded ${
+                        index === currentSentenceIndex
+                          ? 'bg-indigo-500/30 text-indigo-200 font-semibold'
+                          : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                      }`}
+                    >
+                      {sentence}
+                    </p>
+                  ))
                 ) : (
                   <div className="flex items-center justify-center h-full">
                     <p className="text-lg text-gray-300 italic">Ready to start.</p>
