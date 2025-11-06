@@ -39,6 +39,7 @@ export default function App() {
   const [selectedGeminiVoice, setSelectedGeminiVoice] = useState<string>(VOICES[0].id);
   const [browserVoices, setBrowserVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedBrowserVoiceUri, setSelectedBrowserVoiceUri] = useState<string | null>(null);
+  const [openMenu, setOpenMenu] = useState<'chapters' | 'bookmarks' | 'speed' | null>(null);
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
@@ -295,24 +296,26 @@ export default function App() {
                 <div className="w-1/2">{renderVoiceSelector()}</div>
               </div>
               <div className="w-full grid grid-cols-3 gap-2 items-center text-sm text-gray-400">
-                <div className="relative group">
-                    <button disabled={chapters.length === 0} className="w-full flex items-center justify-center space-x-2 p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ListIcon className="w-5 h-5" /><span>Chapters</span><ChevronDownIcon className="w-4 h-4" /></button>
-                    <div className="absolute bottom-full mb-2 w-full bg-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto hidden group-hover:block z-10">{chapters.map(chap => <a key={chap.sentenceIndex} onClick={() => handleJumpToSentence(chap.sentenceIndex)} className="block px-4 py-2 text-xs truncate hover:bg-gray-600 cursor-pointer">{chap.title}</a>)}</div>
+                <div className="relative">
+                  <button onClick={() => setOpenMenu(openMenu === 'chapters' ? null : 'chapters')} disabled={chapters.length === 0} className="w-full flex items-center justify-center space-x-2 p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ListIcon className="w-5 h-5" /><span>Chapters</span><ChevronDownIcon className="w-4 h-4" /></button>
+                  <div className={`absolute bottom-full mb-2 w-full bg-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto z-10 ${openMenu === 'chapters' ? 'block' : 'hidden'}`}>
+                    {chapters.map(chap => <a key={chap.sentenceIndex} onClick={() => { handleJumpToSentence(chap.sentenceIndex); setOpenMenu(null); }} className="block px-4 py-2 text-xs truncate hover:bg-gray-600 cursor-pointer">{chap.title}</a>)}
+                  </div>
                 </div>
-                 <div className="relative group">
-                    <button className="w-full flex items-center justify-center space-x-2 p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"><BookmarkIcon className="w-5 h-5" /><span>Bookmarks</span><ChevronDownIcon className="w-4 h-4" /></button>
-                     <div className="absolute bottom-full mb-2 w-full bg-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto hidden group-hover:block z-10">
+                 <div className="relative">
+                    <button onClick={() => setOpenMenu(openMenu === 'bookmarks' ? null : 'bookmarks')} className="w-full flex items-center justify-center space-x-2 p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"><BookmarkIcon className="w-5 h-5" /><span>Bookmarks</span><ChevronDownIcon className="w-4 h-4" /></button>
+                     <div className={`absolute bottom-full mb-2 w-full bg-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto z-10 ${openMenu === 'bookmarks' ? 'block' : 'hidden'}`}>
                         {bookmarks.length > 0 ? bookmarks.map(bm => (
                             <div key={bm.sentenceIndex} className="flex items-center justify-between px-4 py-2 hover:bg-gray-600">
-                                <a onClick={() => handleJumpToSentence(bm.sentenceIndex)} className="text-xs truncate cursor-pointer flex-1 pr-2">{bm.textSnippet}</a>
+                                <a onClick={() => { handleJumpToSentence(bm.sentenceIndex); setOpenMenu(null); }} className="text-xs truncate cursor-pointer flex-1 pr-2">{bm.textSnippet}</a>
                                 <button onClick={() => handleDeleteBookmark(bm.sentenceIndex)} className="text-red-400 hover:text-red-300 text-xs font-bold">X</button>
                             </div>
                         )) : <span className="block px-4 py-2 text-xs text-gray-500">No bookmarks yet.</span>}
                     </div>
                 </div>
-                <div className="relative group">
-                    <button className="w-full flex items-center justify-center space-x-2 p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"><SpeedIcon className="w-5 h-5" /><span>{playbackRate}x Speed</span><ChevronDownIcon className="w-4 h-4" /></button>
-                     <div className="absolute bottom-full mb-2 w-full bg-gray-700 rounded-lg shadow-lg overflow-y-auto hidden group-hover:block z-10">{PLAYBACK_SPEEDS.map(speed => <a key={speed} onClick={() => setPlaybackRate(speed)} className="block px-4 py-2 text-xs text-center hover:bg-gray-600 cursor-pointer">{speed}x</a>)}</div>
+                <div className="relative">
+                    <button onClick={() => setOpenMenu(openMenu === 'speed' ? null : 'speed')} className="w-full flex items-center justify-center space-x-2 p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"><SpeedIcon className="w-5 h-5" /><span>{playbackRate}x Speed</span><ChevronDownIcon className="w-4 h-4" /></button>
+                     <div className={`absolute bottom-full mb-2 w-full bg-gray-700 rounded-lg shadow-lg overflow-y-auto z-10 ${openMenu === 'speed' ? 'block' : 'hidden'}`}>{PLAYBACK_SPEEDS.map(speed => <a key={speed} onClick={() => { setPlaybackRate(speed); setOpenMenu(null); }} className="block px-4 py-2 text-xs text-center hover:bg-gray-600 cursor-pointer">{speed}x</a>)}</div>
                 </div>
               </div>
               <PlaybackControls playbackState={playbackState} onPlay={handlePlay} onPause={handlePause} onStop={handleStop} onAddBookmark={handleAddBookmark} />
