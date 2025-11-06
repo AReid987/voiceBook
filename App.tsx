@@ -177,7 +177,6 @@ export default function App() {
       setPlaybackState('playing');
     } else if (playbackState === 'stopped' && sentences.length > 0) {
       isPlayingRef.current = true; // Manually update the ref to prevent race condition on first play.
-      setPlaybackState('playing');
       playSentence(currentSentenceIndex);
     }
   };
